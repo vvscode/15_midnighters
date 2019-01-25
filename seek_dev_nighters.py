@@ -18,9 +18,11 @@ def extend_attempt_with_local_time(attempt):
 def load_attempts():
     page_number = 1
     number_of_pages = 1
+    url = "https://devman.org/api/challenges/solution_attempts/"
     while page_number <= number_of_pages:
-        url = "https://devman.org/api/challenges/solution_attempts/?page={}".format(page_number)
-        page_content = requests.get(url).json()
+        page_content = requests.get(url, params = {
+            "page": page_number
+        }).json()
 
         attemps = page_content["records"]
         number_of_pages = page_content["number_of_pages"]
@@ -32,8 +34,8 @@ def load_attempts():
 
 
 def get_midnighters(attempts):
-    NEW_DAY_HOUR = 6
-    return filter(lambda x: x["local_hour"] < NEW_DAY_HOUR, attempts)
+    new_day_hour = 6
+    return filter(lambda x: x["local_hour"] < new_day_hour, attempts)
 
 
 def get_usernames_from_attempts(attempts):
