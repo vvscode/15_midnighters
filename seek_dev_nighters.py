@@ -1,18 +1,14 @@
 import requests
 import pytz
-import datetime
-import copy
+from datetime import datetime
 
 
-def extend_attempt_with_local_time(attempt):
-    extended_attempt = copy.copy(attempt)
-
-    utc_date = datetime.datetime.utcfromtimestamp(attempt["timestamp"])
-    timezone = pytz.timezone(attempt["timezone"])
-    local_date = utc_date.replace(tzinfo=timezone)
-
-    extended_attempt["local_hour"] = local_date.hour
-    return extended_attempt
+def get_attempt_hour(attempt):
+    local_date = datetime.fromtimestamp(
+        attempt["timestamp"],
+        pytz.timezone(attempt["timezone"])
+    )
+    return local_date.hour
 
 
 def load_attempts():
@@ -20,7 +16,7 @@ def load_attempts():
     number_of_pages = 1
     url = "https://devman.org/api/challenges/solution_attempts/"
     while page_number <= number_of_pages:
-        page_content = requests.get(url, params = {
+        page_content = requests.get(url, params={
             "page": page_number
         }).json()
 
@@ -30,12 +26,12 @@ def load_attempts():
         page_number += 1
 
         for attempt in attemps:
-            yield extend_attempt_with_local_time(attempt)
+            yield attempt
 
 
-def get_midnighters(attempts):
+def get_midnighters_attempts(attempts):
     new_day_hour = 6
-    return filter(lambda x: x["local_hour"] < new_day_hour, attempts)
+    return filter(lambda x: get_attempt_hour(x) < new_day_hour, attempts)
 
 
 def get_usernames_from_attempts(attempts):
@@ -45,5 +41,5 @@ def get_usernames_from_attempts(attempts):
 
 if __name__ == "__main__":
     attemps = load_attempts()
-    usernames = get_usernames_from_attempts(get_midnighters(attemps))
+    usernames = get_usernames_from_attempts(get_midnighters_attempts(attemps))
     print("{} midnighter(s) detected".format(len(usernames)))
